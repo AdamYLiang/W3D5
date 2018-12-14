@@ -32,12 +32,12 @@ class DBConnection
   end
 
   def self.execute(*args)
-    print_query(*args)
+    # print_query(*args)
     instance.execute(*args)
   end
 
   def self.execute2(*args)
-    print_query(*args)
+    # print_query(*args)
     instance.execute2(*args)
   end
 
