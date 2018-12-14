@@ -19,8 +19,7 @@ class SQLObject
 
     @columns = cols[0].map do |column|
       column.to_sym
-    end
-    
+    end 
   end
 
   def self.finalize!
@@ -91,18 +90,42 @@ class SQLObject
   end
 
   def attribute_values
-    # ...
+    self.class.columns.map { |attr_name| self.send(attr_name) }
   end
 
   def insert
-    # ...
+    col_names = (self.class.columns.drop(1)).join(", ")
+    question_marks = (["?"] * (self.class.columns.length - 1)).join(", ")
+    
+    DBConnection.execute(<<-SQL, *attribute_values.drop(1))
+      INSERT INTO
+      #{self.class.table_name} (#{col_names})
+      VALUES
+      (#{question_marks})
+    SQL
+    
+    self.id = DBConnection.last_insert_row_id 
   end
 
   def update
-    # ...
+    set_line = self.class.columns.drop(1).map { |el| "#{el} = ?" }.join(", ")
+    attr_vals = attribute_values.drop(1) << attribute_values[0]
+
+    DBConnection.execute(<<-SQL, *attr_vals)
+      UPDATE
+        #{self.class.table_name}
+      SET
+        #{set_line}
+      WHERE
+        id = ?
+    SQL
   end
 
   def save
-    # ...
+    if self.attributes[:id].nil?
+      insert
+    else
+      update
+    end
   end
 end
